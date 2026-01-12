@@ -5,6 +5,7 @@ import type {
     WidgetEditorDisplay,
     WidgetItem
 } from '../types/Widget';
+import { resolveModelDisplayName } from '../utils/modelNameResolver';
 
 export class ModelWidget implements Widget {
     getDefaultColor(): string { return 'cyan'; }
@@ -17,8 +18,15 @@ export class ModelWidget implements Widget {
     render(item: WidgetItem, context: RenderContext, settings: Settings): string | null {
         if (context.isPreview) {
             return item.rawValue ? 'Claude' : 'Model: Claude';
-        } else if (context.data?.model?.display_name) {
-            return item.rawValue ? context.data.model.display_name : `Model: ${context.data.model.display_name}`;
+        } else if (context.data?.model) {
+            const displayName = resolveModelDisplayName(
+                context.data.model.id,
+                context.data.model.display_name,
+                settings
+            );
+            if (displayName) {
+                return item.rawValue ? displayName : `Model: ${displayName}`;
+            }
         }
         return null;
     }

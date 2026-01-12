@@ -6,7 +6,7 @@ import { PowerlineConfigSchema } from './PowerlineConfig';
 import { WidgetItemSchema } from './Widget';
 
 // Current version - bump this when making breaking changes to the schema
-export const CURRENT_VERSION = 3;
+export const CURRENT_VERSION = 4;
 
 // Schema for v1 settings (before version field was added)
 export const SettingsSchema_v1 = z.object({
@@ -20,6 +20,13 @@ export const SettingsSchema_v1 = z.object({
     overrideBackgroundColor: z.string().optional(),
     overrideForegroundColor: z.string().optional(),
     globalBold: z.boolean().optional()
+});
+
+// Schema for model name mappings
+export const ModelMappingSchema = z.object({
+    pattern: z.string(),
+    displayName: z.string(),
+    matchType: z.enum(['contains', 'glob', 'regex']).default('contains')
 });
 
 // Main settings schema with defaults
@@ -58,6 +65,15 @@ export const SettingsSchema = z.object({
         theme: undefined,
         autoAlign: false
     }),
+    modelMappings: z.array(ModelMappingSchema).default([
+        { pattern: 'claude-haiku-4-5', displayName: 'Haiku 4.5', matchType: 'contains' },
+        { pattern: 'claude-sonnet-4-5', displayName: 'Sonnet 4.5', matchType: 'contains' },
+        { pattern: 'claude-opus-4-5', displayName: 'Opus 4.5', matchType: 'contains' },
+        { pattern: 'claude-sonnet-4-0', displayName: 'Sonnet 4', matchType: 'contains' },
+        { pattern: 'claude-opus-4-0', displayName: 'Opus 4', matchType: 'contains' },
+        { pattern: 'claude-3-5-sonnet', displayName: 'Sonnet 3.5', matchType: 'contains' },
+        { pattern: 'claude-3-5-haiku', displayName: 'Haiku 3.5', matchType: 'contains' },
+    ]),
     updatemessage: z.object({
         message: z.string().nullable().optional(),
         remaining: z.number().nullable().optional()

@@ -111,6 +111,39 @@ export const migrations: Migration[] = [
 
             return migrated;
         }
+    },
+    {
+        fromVersion: 3,
+        toVersion: 4,
+        description: 'Add model name mappings',
+        migrate: (data) => {
+            // Copy all existing data to v4
+            const migrated: Record<string, unknown> = { ...data };
+
+            // Update version to 4
+            migrated.version = 4;
+
+            // Add default model mappings if not present
+            if (!migrated.modelMappings) {
+                migrated.modelMappings = [
+                    { pattern: 'claude-haiku-4-5', displayName: 'Haiku 4.5', matchType: 'contains' },
+                    { pattern: 'claude-sonnet-4-5', displayName: 'Sonnet 4.5', matchType: 'contains' },
+                    { pattern: 'claude-opus-4-5', displayName: 'Opus 4.5', matchType: 'contains' },
+                    { pattern: 'claude-sonnet-4-0', displayName: 'Sonnet 4', matchType: 'contains' },
+                    { pattern: 'claude-opus-4-0', displayName: 'Opus 4', matchType: 'contains' },
+                    { pattern: 'claude-3-5-sonnet', displayName: 'Sonnet 3.5', matchType: 'contains' },
+                    { pattern: 'claude-3-5-haiku', displayName: 'Haiku 3.5', matchType: 'contains' },
+                ];
+            }
+
+            // Add update message for v4 migration
+            migrated.updatemessage = {
+                message: 'ccstatusline: Model name mapping added - customize in settings.json',
+                remaining: 12
+            };
+
+            return migrated;
+        }
     }
 ];
 
