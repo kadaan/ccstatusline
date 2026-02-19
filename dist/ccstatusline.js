@@ -50916,7 +50916,7 @@ var WidgetItemSchema = exports_external.object({
 });
 
 // src/types/Settings.ts
-var CURRENT_VERSION = 4;
+var CURRENT_VERSION = 5;
 var SettingsSchema_v1 = exports_external.object({
   lines: exports_external.array(exports_external.array(WidgetItemSchema)).optional(),
   flexMode: FlexModeSchema.optional(),
@@ -50930,9 +50930,8 @@ var SettingsSchema_v1 = exports_external.object({
   globalBold: exports_external.boolean().optional()
 });
 var ModelMappingSchema = exports_external.object({
-  pattern: exports_external.string(),
-  displayName: exports_external.string(),
-  matchType: exports_external.enum(["contains", "glob", "regex"]).default("contains")
+  id: exports_external.string(),
+  displayName: exports_external.string()
 });
 var SettingsSchema = exports_external.object({
   version: exports_external.number().default(CURRENT_VERSION),
@@ -50968,13 +50967,9 @@ var SettingsSchema = exports_external.object({
     autoAlign: false
   }),
   modelMappings: exports_external.array(ModelMappingSchema).default([
-    { pattern: "claude-haiku-4-5", displayName: "Haiku 4.5", matchType: "contains" },
-    { pattern: "claude-sonnet-4-5", displayName: "Sonnet 4.5", matchType: "contains" },
-    { pattern: "claude-opus-4-5", displayName: "Opus 4.5", matchType: "contains" },
-    { pattern: "claude-sonnet-4-0", displayName: "Sonnet 4", matchType: "contains" },
-    { pattern: "claude-opus-4-0", displayName: "Opus 4", matchType: "contains" },
-    { pattern: "claude-3-5-sonnet", displayName: "Sonnet 3.5", matchType: "contains" },
-    { pattern: "claude-3-5-haiku", displayName: "Haiku 3.5", matchType: "contains" }
+    { id: "ANTHROPIC_DEFAULT_HAIKU_MODEL", displayName: "ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME" },
+    { id: "ANTHROPIC_DEFAULT_SONNET_MODEL", displayName: "ANTHROPIC_DEFAULT_SONNET_MODEL_NAME" },
+    { id: "ANTHROPIC_DEFAULT_OPUS_MODEL", displayName: "ANTHROPIC_DEFAULT_OPUS_MODEL_NAME" }
   ]),
   updatemessage: exports_external.object({
     message: exports_external.string().nullable().optional(),
@@ -51091,6 +51086,25 @@ var migrations = [
       }
       migrated.updatemessage = {
         message: "ccstatusline: Model name mapping added - customize in settings.json",
+        remaining: 12
+      };
+      return migrated;
+    }
+  },
+  {
+    fromVersion: 4,
+    toVersion: 5,
+    description: "Migrate model mappings to env-var-based format",
+    migrate: (data) => {
+      const migrated = { ...data };
+      migrated.version = 5;
+      migrated.modelMappings = [
+        { id: "ANTHROPIC_DEFAULT_HAIKU_MODEL", displayName: "ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME" },
+        { id: "ANTHROPIC_DEFAULT_SONNET_MODEL", displayName: "ANTHROPIC_DEFAULT_SONNET_MODEL_NAME" },
+        { id: "ANTHROPIC_DEFAULT_OPUS_MODEL", displayName: "ANTHROPIC_DEFAULT_OPUS_MODEL_NAME" }
+      ];
+      migrated.updatemessage = {
+        message: "ccstatusline: Model name mapping updated to env-var format - customize in settings.json",
         remaining: 12
       };
       return migrated;
@@ -52266,34 +52280,18 @@ function getDefaultPowerlineTheme() {
 }
 
 // src/utils/modelNameResolver.ts
-function globToRegex(glob) {
-  const escaped = glob.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*").replace(/\?/g, ".");
-  return new RegExp(`^${escaped}$`, "i");
-}
-function matchesPattern(modelId, pattern, matchType) {
-  switch (matchType) {
-    case "contains":
-      return modelId.toLowerCase().includes(pattern.toLowerCase());
-    case "glob":
-      return globToRegex(pattern).test(modelId);
-    case "regex":
-      try {
-        return new RegExp(pattern, "i").test(modelId);
-      } catch {
-        return false;
-      }
-    default:
-      return false;
-  }
-}
 function resolveModelDisplayName(modelId, originalDisplayName, settings) {
   if (!modelId) {
     return originalDisplayName;
   }
   const mappings = settings.modelMappings ?? [];
   for (const mapping of mappings) {
-    if (matchesPattern(modelId, mapping.pattern, mapping.matchType)) {
-      return mapping.displayName;
+    const idValue = process.env[mapping.id];
+    if (idValue !== undefined && idValue === modelId) {
+      const displayValue = process.env[mapping.displayName];
+      if (displayValue !== undefined) {
+        return displayValue;
+      }
     }
   }
   return originalDisplayName;

@@ -6,7 +6,7 @@ import { PowerlineConfigSchema } from './PowerlineConfig';
 import { WidgetItemSchema } from './Widget';
 
 // Current version - bump this when making breaking changes to the schema
-export const CURRENT_VERSION = 4;
+export const CURRENT_VERSION = 5;
 
 // Schema for v1 settings (before version field was added)
 export const SettingsSchema_v1 = z.object({
@@ -23,10 +23,11 @@ export const SettingsSchema_v1 = z.object({
 });
 
 // Schema for model name mappings
+// id: env var name whose value is the exact model ID to match
+// displayName: env var name whose value is the display name to use
 export const ModelMappingSchema = z.object({
-    pattern: z.string(),
-    displayName: z.string(),
-    matchType: z.enum(['contains', 'glob', 'regex']).default('contains')
+    id: z.string(),
+    displayName: z.string()
 });
 
 // Main settings schema with defaults
@@ -66,13 +67,9 @@ export const SettingsSchema = z.object({
         autoAlign: false
     }),
     modelMappings: z.array(ModelMappingSchema).default([
-        { pattern: 'claude-haiku-4-5', displayName: 'Haiku 4.5', matchType: 'contains' },
-        { pattern: 'claude-sonnet-4-5', displayName: 'Sonnet 4.5', matchType: 'contains' },
-        { pattern: 'claude-opus-4-5', displayName: 'Opus 4.5', matchType: 'contains' },
-        { pattern: 'claude-sonnet-4-0', displayName: 'Sonnet 4', matchType: 'contains' },
-        { pattern: 'claude-opus-4-0', displayName: 'Opus 4', matchType: 'contains' },
-        { pattern: 'claude-3-5-sonnet', displayName: 'Sonnet 3.5', matchType: 'contains' },
-        { pattern: 'claude-3-5-haiku', displayName: 'Haiku 3.5', matchType: 'contains' },
+        { id: 'ANTHROPIC_DEFAULT_HAIKU_MODEL', displayName: 'ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME' },
+        { id: 'ANTHROPIC_DEFAULT_SONNET_MODEL', displayName: 'ANTHROPIC_DEFAULT_SONNET_MODEL_NAME' },
+        { id: 'ANTHROPIC_DEFAULT_OPUS_MODEL', displayName: 'ANTHROPIC_DEFAULT_OPUS_MODEL_NAME' },
     ]),
     updatemessage: z.object({
         message: z.string().nullable().optional(),

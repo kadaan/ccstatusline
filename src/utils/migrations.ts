@@ -144,6 +144,33 @@ export const migrations: Migration[] = [
 
             return migrated;
         }
+    },
+    {
+        fromVersion: 4,
+        toVersion: 5,
+        description: 'Migrate model mappings to env-var-based format',
+        migrate: (data) => {
+            const migrated: Record<string, unknown> = { ...data };
+
+            // Update version to 5
+            migrated.version = 5;
+
+            // Replace old pattern/matchType-based mappings with new env-var-name format
+            migrated.modelMappings = [
+                { id: 'ANTHROPIC_DEFAULT_HAIKU_MODEL', displayName: 'ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME' },
+                { id: 'ANTHROPIC_DEFAULT_SONNET_MODEL', displayName: 'ANTHROPIC_DEFAULT_SONNET_MODEL_NAME' },
+                { id: 'ANTHROPIC_DEFAULT_OPUS_MODEL', displayName: 'ANTHROPIC_DEFAULT_OPUS_MODEL_NAME' },
+            ];
+
+
+            // Add update message for v5 migration
+            migrated.updatemessage = {
+                message: 'ccstatusline: Model name mapping updated to env-var format - customize in settings.json',
+                remaining: 12
+            };
+
+            return migrated;
+        }
     }
 ];
 
